@@ -19,49 +19,74 @@ via the aymmetric RSA.
 -- PART 1 : asymmetric encryption
 
 gcd :: Int -> Int -> Int
-gcd
-  = undefined
+gcd m 0 = m
+gcd m n = gcd n (m `mod` n)
+
 
 phi :: Int -> Int
-phi
-  = undefined
+phi m = length [ x | x <- [1..m], gcd m x == 1 ]
 
 -- Calculates (u, v, d) the gcd (d) and Bezout coefficients (u and v)
 -- such that au + bv = d
 computeCoeffs :: Int -> Int -> (Int, Int)
-computeCoeffs
-  = undefined
+computeCoeffs a b
+  | b == 0     = (1, 0)
+  | a == 0     = (0, 1)
+  | otherwise  = (v', u' - q * v')
+  where
+    (q, r)   = quotRem a b
+    (u', v') = computeCoeffs b r
 
 -- Inverse of a modulo m
 inverse :: Int -> Int -> Int
-inverse
-  = undefined
+inverse a m
+  | gcd a m == 1 = u `mod` m
+  | otherwise    = 0
+  where
+    (u, _) = computeCoeffs a m
 
 -- Calculates (a^k mod m)
 modPow :: Int -> Int -> Int -> Int
-modPow
-  = undefined
+-- pre: k >= 0
+modPow a k m
+  | k == 0    = 1 `mod` m
+  | even k    = modPow (a^2 `mod` m) j m
+  | otherwise = (a * modPow (a^2 `mod` m) j m) `mod` m
+  where
+    j = k `div` 2
+
 
 -- Returns the smallest integer that is coprime with phi
 smallestCoPrimeOf :: Int -> Int
-smallestCoPrimeOf
-  = undefined
+smallestCoPrimeOf a
+  | a > 0     = smallestCoPrimeOf' a 2
+  | otherwise = 0
+  where
+    smallestCoPrimeOf' a b
+      | gcd a b == 1 = b
+      | otherwise    = smallestCoPrimeOf' a (b + 1)
+
+
 
 -- Generates keys pairs (public, private) = ((e, n), (d, n))
 -- given two "large" distinct primes, p and q
 genKeys :: Int -> Int -> ((Int, Int), (Int, Int))
-genKeys
-  = undefined
+--  pre: params are prime
+genKeys p q
+  = ((e, n), (d, n))
+  where
+    n = p * q
+    e = smallestCoPrimeOf ((p - 1) * (q - 1))
+    d = inverse e ((p - 1) * (q - 1))
 
 -- RSA encryption/decryption
 rsaEncrypt :: Int -> (Int, Int) -> Int
-rsaEncrypt
-  = undefined
+rsaEncrypt x (e, n)
+  = modPow x e n
 
 rsaDecrypt :: Int -> (Int, Int) -> Int
-rsaDecrypt
-  = undefined
-
+rsaDecrypt c (d, n)
+  = modPow c d n
 -------------------------------------------------------------------------------
 -- PART 2 : symmetric encryption
 
